@@ -88,23 +88,32 @@ def convert_length(value, from_unit, to_unit):
     return meters / LENGTH_UNITS[to_unit]
 
 def convert_weight(value, from_unit, to_unit):
-    grams = value * WEIGHT_UNITS[from_unit]
-    return grams / WEIGHT_UNITS[to_unit]
+    grams = value * WEIGHT_UNITS[from_unit]  # Sabse pehle grams me convert karo
+    return grams / WEIGHT_UNITS[to_unit]  # Target unit me wapis convert karo
 
 def convert_temperature(value, from_unit, to_unit):
-    if from_unit == "Celsius":
-        kelvin = value + 273.15
-    elif from_unit == "Fahrenheit":
-        kelvin = (value - 32) * 5/9 + 273.15
-    else:
-        kelvin = value
+    if from_unit == to_unit:
+        return value  # Agar same unit ho, kuch convert nahi karna
 
-    if to_unit == "Celsius":
-        return kelvin - 273.15
-    elif to_unit == "Fahrenheit":
-        return (kelvin - 273.15) * 9/5 + 32
-    else:
-        return kelvin
+    # Celsius to other conversions
+    if from_unit == "Celsius" and to_unit == "Fahrenheit":
+        return (value * 9/5) + 32
+    if from_unit == "Celsius" and to_unit == "Kelvin":
+        return value + 273.15
+
+    # Fahrenheit to other conversions
+    if from_unit == "Fahrenheit" and to_unit == "Celsius":
+        return (value - 32) * 5/9
+    if from_unit == "Fahrenheit" and to_unit == "Kelvin":
+        return (value - 32) * 5/9 + 273.15
+
+    # Kelvin to other conversions
+    if from_unit == "Kelvin" and to_unit == "Celsius":
+        return value - 273.15
+    if from_unit == "Kelvin" and to_unit == "Fahrenheit":
+        return (value - 273.15) * 9/5 + 32
+
+    return None  # Agar kuch na mile to return None
 
 def format_number(number):
     if abs(number) < 0.000001:
@@ -119,8 +128,17 @@ def format_number(number):
         return f"{number:,.2f}"
 
 # Session state default values for swap functionality
-if "from_unit" not in st.session_state:
-    st.session_state.from_unit = "Meter"
+if "from_unit" not in st.session_state or conversion_type != st.session_state.get("last_conversion_type"):
+    if conversion_type == "Length":
+        st.session_state.from_unit = "Meter"
+        st.session_state.to_unit = "Kilometer"
+    elif conversion_type == "Weight":
+        st.session_state.from_unit = "Gram"
+        st.session_state.to_unit = "Kilogram"
+    else:  # Temperature
+        st.session_state.from_unit = "Celsius"
+        st.session_state.to_unit = "Fahrenheit"
+    st.session_state.last_conversion_type = conversion_type  # Store last selected type
 if "to_unit" not in st.session_state:
     st.session_state.to_unit = "Kilometer"
 
